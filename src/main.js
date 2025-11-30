@@ -115,14 +115,35 @@ document.addEventListener('restore-translation', (event) => {
   historyDrawer.close();
 });
 
-inputTextarea.onchange = async (event) => {
-  console.log('Input textarea changed:', event);
-  const text = event.target.value;
+// Debounce helper function
+function debounce(func, wait) {
+  let timeoutId;
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+// Debounced input handler for real-time translation
+const handleInputChange = debounce(async (text) => {
+  if (!text.trim()) {
+    outputTextarea.value = '';
+    enableDisableOutputButtons(true);
+    return;
+  }
 
   const langCode = await detectLanguage(text);
   console.log(`Detected language code: ${langCode}`);
 
   sourceLanguageSelect.value = langCode;
+
+  await handleTranslation(text);
+}, 500);
+
+inputTextarea.oninput = (event) => {
+  console.log('Input textarea input:', event);
+  const text = event.target.value;
+  handleInputChange(text);
 };
 
 translateButton.addEventListener('click', async () => {
@@ -135,31 +156,7 @@ translateButton.addEventListener('click', async () => {
       inputTextarea.value ||
       'Hello, world! This is a test to see if we can detect the language of this text.';
 
-    const translationStream = await translateText(
-      text,
-      targetLanguageSelect.value
-    );
-    console.log(`Translation stream:`, translationStream);
-
-    for await (const chunk of translationStream.stream) {
-      console.log(chunk);
-      outputTextarea.value += chunk;
-    }
-
-    translateButton.loading = false;
-
-    translationStream.translator.destroy();
-
-    enableDisableOutputButtons(false);
-
-    const { storeTranslation } = await import('./storage-service.js');
-
-    storeTranslation(
-      text,
-      outputTextarea.value, // placeholder, will update as we get chunks
-      sourceLanguageSelect.value,
-      targetLanguageSelect.value
-    );
+    await handleTranslation(text);
   } catch (err) {
     console.error('Translation error:', err);
     translateButton.loading = false;
@@ -182,6 +179,34 @@ recordComponent.addEventListener('transcription-complete', () => {
 recordComponent.addEventListener('transcription-error', (event) => {
   console.error('Transcription error:', event.detail.error);
 });
+
+async function handleTranslation(text) {
+  const translationStream = await translateText(
+    text,
+    targetLanguageSelect.value
+  );
+  console.log(`Translation stream:`, translationStream);
+
+  for await (const chunk of translationStream.stream) {
+    console.log(chunk);
+    outputTextarea.value += chunk;
+  }
+
+  translateButton.loading = false;
+
+  translationStream.translator.destroy();
+
+  enableDisableOutputButtons(false);
+
+  const { storeTranslation } = await import('./storage-service.js');
+
+  storeTranslation(
+    text,
+    outputTextarea.value, // placeholder, will update as we get chunks
+    sourceLanguageSelect.value,
+    targetLanguageSelect.value
+  );
+}
 
 // transcribeButton.addEventListener('click', async () => {
 //     transcribeButton.loading = true;
