@@ -2,9 +2,6 @@
 
 A privacy-focused translation Progressive Web App (PWA) that runs entirely on-device. Fast, secure, and works offline.
 
-![PWA](https://img.shields.io/badge/PWA-Ready-blueviolet)
-![License](https://img.shields.io/badge/license-ISC-blue)
-
 ## Features
 
 - **100% On-Device Processing** - All translation and transcription happens locally on your device. Your data never leaves your machine.
