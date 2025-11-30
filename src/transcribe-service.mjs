@@ -26,6 +26,16 @@ export async function transcribeAudio(blob) {
     }
     catch (error) {
         console.error('Error transcribing audio:', error);
+
+        const toast = document.getElementById('target-toast');
+        if (toast) {
+            toast.show('Error during transcription. Please try again.', 
+                { 
+                    priority: 'high', 
+                    dismissible: true 
+                }
+            );
+        }
     }
 }
 
@@ -70,6 +80,17 @@ export async function recordAudio() {
     }
     catch (error) {
         console.error('Error recording audio:', error);
+
+        const toast = document.getElementById('target-toast');
+        if (toast) {
+            toast.show('Error during recording. Please try again.', 
+                { 
+                    priority: 'high', 
+                    dismissible: true 
+                }
+            );
+        }
+
         throw error;
     }
 }
@@ -79,5 +100,5 @@ export async function stopRecording() {
         await recorder.stop();
     }
 
-    console.log('currentblob:', currentBlob); 
+    console.log('currentblob:', currentBlob);
 }

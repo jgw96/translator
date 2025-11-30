@@ -20,6 +20,17 @@ export async function detectLanguage(text) {
     }
     catch (error) {
         console.error('Error detecting language:', error);
+
+        const toast = document.getElementById('target-toast');
+        if (toast) {
+            toast.show('Error detecting language. Please try again.', 
+                { 
+                    priority: 'high', 
+                    dismissible: true 
+                }
+            );
+        }
+
         throw error;
     }
 }
@@ -64,6 +75,16 @@ export async function translateText(text, targetLanguage) {
     }
     catch (err) {
         console.error('Error translating text:', err);
+        const toast = document.getElementById('target-toast');
+        if (toast) {
+            toast.show('Error translating text. You may need to select a target language. Please try again.', 
+                { 
+                    priority: 'high', 
+                    dismissible: true 
+                }
+            );
+        }
+
         throw err;
     }
 }

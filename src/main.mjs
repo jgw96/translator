@@ -20,20 +20,27 @@ const translateButton = document.getElementById('translate-button');
 translateButton.addEventListener('click', async () => {
     translateButton.loading = true;
 
-    const text = inputTextarea.value || 'Hello, world! This is a test to see if we can detect the language of this text.';
-    const translationStream = await translateText(text, targetLanguageSelect.value);
-    console.log(`Translation stream:`, translationStream);
+    try {
+        const text = inputTextarea.value || 'Hello, world! This is a test to see if we can detect the language of this text.';
+        const translationStream = await translateText(text, targetLanguageSelect.value);
+        console.log(`Translation stream:`, translationStream);
 
-    for await (const chunk of translationStream.stream) {
-        console.log(chunk);
-        outputTextarea.value += chunk;
+        for await (const chunk of translationStream.stream) {
+            console.log(chunk);
+            outputTextarea.value += chunk;
+        }
+
+        translateButton.loading = false;
+
+        translationStream.translator.destroy();
+
+        enableDisableOutputButtons(false);
     }
-
-    translateButton.loading = false;
-
-    translationStream.translator.destroy();
-
-    enableDisableOutputButtons(false);
+    catch (err) {
+        console.error('Translation error:', err);
+        translateButton.loading = false;
+        return;
+    }
 });
 
 const recordButton = document.getElementById('record-button');
