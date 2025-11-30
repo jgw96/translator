@@ -38,7 +38,7 @@ Voice recording uses the [Prompt API][https://developer.chrome.com/docs/ai/promp
 ### Image Text Extraction
 Images are processed using the [Prompt API][https://developer.chrome.com/docs/ai/prompt-api] API with multimodal support to extract text content.
 
-## 🏃 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -88,7 +88,3 @@ The built files will be in the `dist` directory.
 | German   | de   |
 | Chinese  | zh   |
 | Japanese | ja   |
-
-## License
-
-[License - GNU GPL][LICENSE]
