@@ -1,3 +1,5 @@
+import { transcribeAudio as transcribeWithPolyfill } from './polyfills/transcription.js';
+
 let audioStream = null;
 let recorder = null;
 
@@ -5,23 +7,7 @@ let currentBlob = null;
 
 export async function transcribeAudio(blob) {
   try {
-    const arrayBuffer = await blob.arrayBuffer();
-
-    const params = await LanguageModel.params();
-    console.log('Language Model params:', params);
-    const session = await LanguageModel.create({
-      expectedInputs: [{ type: 'audio' }],
-    });
-
-    const stream = session.promptStreaming([
-      {
-        role: 'user',
-        content: [
-          { type: 'text', value: 'transcribe this audio' },
-          { type: 'audio', value: arrayBuffer },
-        ],
-      },
-    ]);
+    const stream = await transcribeWithPolyfill(blob);
     return stream;
   } catch (error) {
     console.error('Error transcribing audio:', error);

@@ -1,3 +1,5 @@
+import { Translator, LanguageDetector } from './polyfills/translation';
+
 let detector = null;
 
 export async function detectLanguage(text) {
@@ -42,9 +44,15 @@ async function initializeDetector() {
   });
 }
 
-export async function translateText(text, targetLanguage) {
+export async function translateText(
+  text,
+  targetLanguage,
+  sourceLanguage = null
+) {
   try {
-    const sourceLanguage = await detectLanguage(text);
+    if (!sourceLanguage) {
+      sourceLanguage = await detectLanguage(text);
+    }
 
     const availability = await Translator.availability({
       sourceLanguage,
