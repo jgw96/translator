@@ -58,8 +58,15 @@
         </section>
 
         <section id="action-section">
-          <gtk-select placeholder="Select target language" id="target-language">
-          </gtk-select>
+          <div id="language-selectors">
+            <gtk-select placeholder="Source language" id="source-language">
+            </gtk-select>
+
+            <p>&rarr;</p>
+
+            <gtk-select placeholder="Target language" id="target-language">
+            </gtk-select>
+          </div>
 
           <gtk-button suggested id="translate-button">Translate</gtk-button>
         </section>
@@ -74,8 +81,6 @@
           <div id="output-actions">
             <gtk-button id="copy-button">Copy</gtk-button>
             <gtk-button id="share-button">Share</gtk-button>
-
-            <gtk-button id="clear-button">Clear</gtk-button>
           </div>
         </section>
       </div>

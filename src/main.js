@@ -1,7 +1,7 @@
-import { translateText } from './translation-service.js';
+import { translateText, detectLanguage } from './translation-service.js';
 import { transcribeAudio } from './transcribe-service.js';
 
-document.querySelector('gtk-select').items = [
+const langs = [
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Spanish' },
   { value: 'fr', label: 'French' },
@@ -10,12 +10,26 @@ document.querySelector('gtk-select').items = [
   { value: 'ja', label: 'Japanese' },
 ];
 
+document.querySelector('gtk-select#source-language').items = langs;
+document.querySelector('gtk-select#target-language').items = langs;
+
 enableDisableOutputButtons(true);
 
 const inputTextarea = document.getElementById('input-text');
 const outputTextarea = document.getElementById('output-text');
 const targetLanguageSelect = document.getElementById('target-language');
 const translateButton = document.getElementById('translate-button');
+const sourceLanguageSelect = document.getElementById('source-language');
+
+inputTextarea.onchange = async (event) => {
+  console.log('Input textarea changed:', event);
+  const text = event.target.value;
+
+  const langCode = await detectLanguage(text);
+  console.log(`Detected language code: ${langCode}`);
+
+  sourceLanguageSelect.value = langCode;
+};
 
 translateButton.addEventListener('click', async () => {
   translateButton.loading = true;
@@ -154,12 +168,6 @@ copyButton.addEventListener('click', async () => {
   } catch (err) {
     console.error('Failed to copy text: ', err);
   }
-});
-
-const clearButton = document.getElementById('clear-button');
-clearButton.addEventListener('click', () => {
-  outputTextarea.value = '';
-  enableDisableOutputButtons(true);
 });
 
 const shareButton = document.getElementById('share-button');

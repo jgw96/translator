@@ -40,7 +40,6 @@ export class AppRecord extends LitElement {
           `
         : html`
             <gtk-button
-              suggested
               id="record-button"
               ?loading=${this._recordLoading}
               @click=${this._handleRecord}
