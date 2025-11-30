@@ -1,6 +1,6 @@
 # Translator
 
-A privacy-focused translation Progressive Web App (PWA) that runs entirely on-device. Fast, secure, and works offline.
+A translation Progressive Web App (PWA) that runs entirely on-device. Fast, secure, and works offline.
 
 ## Features
 
@@ -10,7 +10,6 @@ A privacy-focused translation Progressive Web App (PWA) that runs entirely on-de
 - **Voice Input** - Record audio and have it transcribed automatically.
 - **File Upload Support** - Upload text files, audio files, or images to extract and translate text.
 - **Image Text Extraction** - Uses on-device AI to extract text from images.
-- **Multi-Language Support** - Supports translation between English, Spanish, French, German, Chinese, and Japanese.
 - **Auto Language Detection** - Automatically detects the source language of your text.
 
 ## Why I Built This
@@ -68,23 +67,3 @@ npm run build
 ```
 
 The built files will be in the `dist` directory.
-
-## Input Methods
-
-1. **Type** - Simply type or paste text into the input area.
-2. **Voice** - Click the record button to capture audio and transcribe it.
-3. **Upload File** - Upload a:
-   - **Text file** (.txt, .md) - Text is read directly
-   - **Audio file** (.mp3, .wav, .ogg, .m4a) - Audio is transcribed to text
-   - **Image** (.png, .jpg, .gif) - Text is extracted from the image
-
-## Supported Languages
-
-| Language | Code |
-|----------|------|
-| English  | en   |
-| Spanish  | es   |
-| French   | fr   |
-| German   | de   |
-| Chinese  | zh   |
-| Japanese | ja   |
