@@ -1,305 +1,314 @@
 import { LitElement, html, css } from 'lit';
 
 export class GtkTextarea extends LitElement {
-    static properties = {
-        value: { type: String },
-        placeholder: { type: String },
-        disabled: { type: Boolean, reflect: true },
-        readonly: { type: Boolean, reflect: true },
-        rows: { type: Number },
-        maxlength: { type: Number },
-        monospace: { type: Boolean, reflect: true },
-        // Validation states
-        error: { type: Boolean, reflect: true },
-        warning: { type: Boolean, reflect: true },
-        success: { type: Boolean, reflect: true },
-    };
+  static properties = {
+    value: { type: String },
+    placeholder: { type: String },
+    disabled: { type: Boolean, reflect: true },
+    readonly: { type: Boolean, reflect: true },
+    rows: { type: Number },
+    maxlength: { type: Number },
+    monospace: { type: Boolean, reflect: true },
+    // Validation states
+    error: { type: Boolean, reflect: true },
+    warning: { type: Boolean, reflect: true },
+    success: { type: Boolean, reflect: true },
+  };
 
-    static styles = css`
-        :host {
-            display: block;
-        }
+  static styles = css`
+    :host {
+      display: block;
+    }
 
-        .textarea-wrapper {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
+    .textarea-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
 
-        textarea {
-            font-family: inherit;
-            font-size: 15px;
-            line-height: 1.5;
-            min-height: 100px;
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            resize: vertical;
-            
-            /* GTK4 Adwaita view style background */
-            background-color: color-mix(in srgb, currentColor 7%, transparent);
-            color: rgba(0, 0, 0, 0.8);
-            
-            /* Smooth transitions for focus and hover states */
-            transition: background-color 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        outline 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
+    textarea {
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100px;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      resize: vertical;
 
-        textarea::placeholder {
-            color: rgba(0, 0, 0, 0.5);
-        }
+      /* GTK4 Adwaita view style background */
+      background-color: color-mix(in srgb, currentColor 7%, transparent);
+      color: rgba(0, 0, 0, 0.8);
 
-        textarea:hover:not(:disabled):not(:focus) {
-            background-color: color-mix(in srgb, currentColor 10%, transparent);
-        }
+      /* Smooth transitions for focus and hover states */
+      transition:
+        background-color 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        outline 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
 
-        textarea:focus {
-            outline: none;
-            background-color: color-mix(in srgb, currentColor 4%, transparent);
-            box-shadow: inset 0 0 0 2px #3584e4;
-        }
+    textarea::placeholder {
+      color: rgba(0, 0, 0, 0.5);
+    }
 
-        textarea:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+    textarea:hover:not(:disabled):not(:focus) {
+      background-color: color-mix(in srgb, currentColor 10%, transparent);
+    }
 
-        textarea:read-only {
-            background-color: transparent;
-        }
+    textarea:focus {
+      outline: none;
+      background-color: color-mix(in srgb, currentColor 4%, transparent);
+      box-shadow: inset 0 0 0 2px #3584e4;
+    }
 
-        /* Monospace style for code/logs */
-        :host([monospace]) textarea {
-            font-family: monospace;
-        }
+    textarea:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
-        /* Error state - red accent */
-        :host([error]) textarea {
-            box-shadow: inset 0 0 0 2px #e01b24;
-        }
+    textarea:read-only {
+      background-color: transparent;
+    }
 
-        :host([error]) textarea:focus {
-            box-shadow: inset 0 0 0 2px #c01c28;
-        }
+    /* Monospace style for code/logs */
+    :host([monospace]) textarea {
+      font-family: monospace;
+    }
 
-        /* Warning state - yellow/orange accent */
-        :host([warning]) textarea {
-            box-shadow: inset 0 0 0 2px #e5a50a;
-        }
+    /* Error state - red accent */
+    :host([error]) textarea {
+      box-shadow: inset 0 0 0 2px #e01b24;
+    }
 
-        :host([warning]) textarea:focus {
-            box-shadow: inset 0 0 0 2px #c88800;
-        }
+    :host([error]) textarea:focus {
+      box-shadow: inset 0 0 0 2px #c01c28;
+    }
 
-        /* Success state - green accent */
-        :host([success]) textarea {
-            box-shadow: inset 0 0 0 2px #2ec27e;
-        }
+    /* Warning state - yellow/orange accent */
+    :host([warning]) textarea {
+      box-shadow: inset 0 0 0 2px #e5a50a;
+    }
 
-        :host([success]) textarea:focus {
-            box-shadow: inset 0 0 0 2px #26a269;
-        }
+    :host([warning]) textarea:focus {
+      box-shadow: inset 0 0 0 2px #c88800;
+    }
 
-        /* Card style - can be combined with .inline for embedded appearance */
-        :host([card]) textarea {
-            background-color: #ffffff;
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03),
-                        0 1px 3px 1px rgba(0, 0, 0, 0.07),
-                        0 2px 6px 2px rgba(0, 0, 0, 0.03);
-        }
+    /* Success state - green accent */
+    :host([success]) textarea {
+      box-shadow: inset 0 0 0 2px #2ec27e;
+    }
 
-        :host([card]) textarea:focus {
-            background-color: #ffffff;
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.03),
-                        0 1px 3px 1px rgba(0, 0, 0, 0.07),
-                        0 2px 6px 2px rgba(0, 0, 0, 0.03),
-                        inset 0 0 0 2px #3584e4;
-        }
+    :host([success]) textarea:focus {
+      box-shadow: inset 0 0 0 2px #26a269;
+    }
 
-        /* Inline style - for embedding in cards */
-        :host([inline]) textarea {
-            background-color: transparent;
-            border-radius: 6px;
-        }
+    /* Card style - can be combined with .inline for embedded appearance */
+    :host([card]) textarea {
+      background-color: #ffffff;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.03),
+        0 1px 3px 1px rgba(0, 0, 0, 0.07),
+        0 2px 6px 2px rgba(0, 0, 0, 0.03);
+    }
 
-        :host([inline]) textarea:hover:not(:disabled):not(:focus) {
-            background-color: color-mix(in srgb, currentColor 5%, transparent);
-        }
+    :host([card]) textarea:focus {
+      background-color: #ffffff;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.03),
+        0 1px 3px 1px rgba(0, 0, 0, 0.07),
+        0 2px 6px 2px rgba(0, 0, 0, 0.03),
+        inset 0 0 0 2px #3584e4;
+    }
 
-        :host([inline]) textarea:focus {
-            background-color: color-mix(in srgb, currentColor 3%, transparent);
-        }
+    /* Inline style - for embedding in cards */
+    :host([inline]) textarea {
+      background-color: transparent;
+      border-radius: 6px;
+    }
 
-        /* Frame style - adds visible border */
-        :host([frame]) textarea {
-            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
-        }
+    :host([inline]) textarea:hover:not(:disabled):not(:focus) {
+      background-color: color-mix(in srgb, currentColor 5%, transparent);
+    }
 
-        :host([frame]) textarea:focus {
-            box-shadow: inset 0 0 0 2px #3584e4;
-        }
+    :host([inline]) textarea:focus {
+      background-color: color-mix(in srgb, currentColor 3%, transparent);
+    }
 
-        /* Outline style - visible border outline */
-        :host([outline]) textarea {
-            background-color: transparent;
-            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
-        }
+    /* Frame style - adds visible border */
+    :host([frame]) textarea {
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+    }
 
-        :host([outline]) textarea:hover:not(:disabled):not(:focus) {
-            background-color: color-mix(in srgb, currentColor 3%, transparent);
-            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
-        }
+    :host([frame]) textarea:focus {
+      box-shadow: inset 0 0 0 2px #3584e4;
+    }
 
-        :host([outline]) textarea:focus {
-            background-color: transparent;
-            box-shadow: inset 0 0 0 2px #3584e4;
-        }
+    /* Outline style - visible border outline */
+    :host([outline]) textarea {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+    }
 
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            textarea {
-                background-color: color-mix(in srgb, currentColor 10%, transparent);
-                color: rgba(255, 255, 255, 0.9);
-            }
+    :host([outline]) textarea:hover:not(:disabled):not(:focus) {
+      background-color: color-mix(in srgb, currentColor 3%, transparent);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+    }
 
-            textarea::placeholder {
-                color: rgba(255, 255, 255, 0.5);
-            }
+    :host([outline]) textarea:focus {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 2px #3584e4;
+    }
 
-            textarea:hover:not(:disabled):not(:focus) {
-                background-color: color-mix(in srgb, currentColor 13%, transparent);
-            }
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      textarea {
+        background-color: color-mix(in srgb, currentColor 10%, transparent);
+        color: rgba(255, 255, 255, 0.9);
+      }
 
-            textarea:focus {
-                background-color: color-mix(in srgb, currentColor 7%, transparent);
-                box-shadow: inset 0 0 0 2px #78aeed;
-            }
+      textarea::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
 
-            :host([card]) textarea {
-                background-color: #303030;
-                box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5),
-                            0 1px 3px 1px rgba(0, 0, 0, 0.15),
-                            0 2px 6px 2px rgba(0, 0, 0, 0.1);
-            }
+      textarea:hover:not(:disabled):not(:focus) {
+        background-color: color-mix(in srgb, currentColor 13%, transparent);
+      }
 
-            :host([card]) textarea:focus {
-                background-color: #303030;
-                box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5),
-                            0 1px 3px 1px rgba(0, 0, 0, 0.15),
-                            0 2px 6px 2px rgba(0, 0, 0, 0.1),
-                            inset 0 0 0 2px #78aeed;
-            }
+      textarea:focus {
+        background-color: color-mix(in srgb, currentColor 7%, transparent);
+        box-shadow: inset 0 0 0 2px #78aeed;
+      }
 
-            :host([frame]) textarea {
-                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-            }
+      :host([card]) textarea {
+        background-color: #303030;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.5),
+          0 1px 3px 1px rgba(0, 0, 0, 0.15),
+          0 2px 6px 2px rgba(0, 0, 0, 0.1);
+      }
 
-            :host([frame]) textarea:focus {
-                box-shadow: inset 0 0 0 2px #78aeed;
-            }
+      :host([card]) textarea:focus {
+        background-color: #303030;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.5),
+          0 1px 3px 1px rgba(0, 0, 0, 0.15),
+          0 2px 6px 2px rgba(0, 0, 0, 0.1),
+          inset 0 0 0 2px #78aeed;
+      }
 
-            :host([outline]) textarea {
-                background-color: transparent;
-                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
-            }
+      :host([frame]) textarea {
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      }
 
-            :host([outline]) textarea:hover:not(:disabled):not(:focus) {
-                background-color: color-mix(in srgb, currentColor 5%, transparent);
-                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-            }
+      :host([frame]) textarea:focus {
+        box-shadow: inset 0 0 0 2px #78aeed;
+      }
 
-            :host([outline]) textarea:focus {
-                background-color: transparent;
-                box-shadow: inset 0 0 0 2px #78aeed;
-            }
+      :host([outline]) textarea {
+        background-color: transparent;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+      }
 
-            :host([error]) textarea {
-                box-shadow: inset 0 0 0 2px #ff7b63;
-            }
+      :host([outline]) textarea:hover:not(:disabled):not(:focus) {
+        background-color: color-mix(in srgb, currentColor 5%, transparent);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+      }
 
-            :host([error]) textarea:focus {
-                box-shadow: inset 0 0 0 2px #e01b24;
-            }
+      :host([outline]) textarea:focus {
+        background-color: transparent;
+        box-shadow: inset 0 0 0 2px #78aeed;
+      }
 
-            :host([warning]) textarea {
-                box-shadow: inset 0 0 0 2px #f8e45c;
-            }
+      :host([error]) textarea {
+        box-shadow: inset 0 0 0 2px #ff7b63;
+      }
 
-            :host([warning]) textarea:focus {
-                box-shadow: inset 0 0 0 2px #e5a50a;
-            }
+      :host([error]) textarea:focus {
+        box-shadow: inset 0 0 0 2px #e01b24;
+      }
 
-            :host([success]) textarea {
-                box-shadow: inset 0 0 0 2px #8ff0a4;
-            }
+      :host([warning]) textarea {
+        box-shadow: inset 0 0 0 2px #f8e45c;
+      }
 
-            :host([success]) textarea:focus {
-                box-shadow: inset 0 0 0 2px #2ec27e;
-            }
-        }
+      :host([warning]) textarea:focus {
+        box-shadow: inset 0 0 0 2px #e5a50a;
+      }
+
+      :host([success]) textarea {
+        box-shadow: inset 0 0 0 2px #8ff0a4;
+      }
+
+      :host([success]) textarea:focus {
+        box-shadow: inset 0 0 0 2px #2ec27e;
+      }
+    }
+  `;
+
+  constructor() {
+    super();
+    this.value = '';
+    this.placeholder = '';
+    this.disabled = false;
+    this.readonly = false;
+    this.rows = 4;
+    this.maxlength = undefined;
+    this.monospace = false;
+    this.error = false;
+    this.warning = false;
+    this.success = false;
+  }
+
+  render() {
+    return html`
+      <div class="textarea-wrapper">
+        <textarea
+          .value=${this.value}
+          placeholder=${this.placeholder}
+          ?disabled=${this.disabled}
+          ?readonly=${this.readonly}
+          rows=${this.rows}
+          maxlength=${this.maxlength ?? ''}
+          @input=${this._handleInput}
+          @change=${this._handleChange}
+          part="textarea"
+        ></textarea>
+      </div>
     `;
+  }
 
-    constructor() {
-        super();
-        this.value = '';
-        this.placeholder = '';
-        this.disabled = false;
-        this.readonly = false;
-        this.rows = 4;
-        this.maxlength = undefined;
-        this.monospace = false;
-        this.error = false;
-        this.warning = false;
-        this.success = false;
-    }
+  _handleInput(e) {
+    this.value = e.target.value;
+    this.dispatchEvent(
+      new CustomEvent('input', {
+        detail: { value: this.value },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
 
-    render() {
-        return html`
-            <div class="textarea-wrapper">
-                <textarea
-                    .value=${this.value}
-                    placeholder=${this.placeholder}
-                    ?disabled=${this.disabled}
-                    ?readonly=${this.readonly}
-                    rows=${this.rows}
-                    maxlength=${this.maxlength ?? ''}
-                    @input=${this._handleInput}
-                    @change=${this._handleChange}
-                    part="textarea"
-                ></textarea>
-            </div>
-        `;
-    }
+  _handleChange(_e) {
+    this.dispatchEvent(
+      new CustomEvent('change', {
+        detail: { value: this.value },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
 
-    _handleInput(e) {
-        this.value = e.target.value;
-        this.dispatchEvent(new CustomEvent('input', {
-            detail: { value: this.value },
-            bubbles: true,
-            composed: true
-        }));
-    }
+  focus() {
+    this.shadowRoot.querySelector('textarea')?.focus();
+  }
 
-    _handleChange(e) {
-        this.dispatchEvent(new CustomEvent('change', {
-            detail: { value: this.value },
-            bubbles: true,
-            composed: true
-        }));
-    }
+  blur() {
+    this.shadowRoot.querySelector('textarea')?.blur();
+  }
 
-    focus() {
-        this.shadowRoot.querySelector('textarea')?.focus();
-    }
-
-    blur() {
-        this.shadowRoot.querySelector('textarea')?.blur();
-    }
-
-    select() {
-        this.shadowRoot.querySelector('textarea')?.select();
-    }
+  select() {
+    this.shadowRoot.querySelector('textarea')?.select();
+  }
 }
 
 customElements.define('gtk-textarea', GtkTextarea);

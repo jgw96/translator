@@ -5,7 +5,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        'service-worker': 'service-worker.js'
+        'service-worker': 'service-worker.js',
       },
       output: {
         entryFileNames: (chunkInfo) => {
@@ -14,8 +14,8 @@ export default defineConfig({
             return '[name].js';
           }
           return 'assets/[name]-[hash].js';
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 });

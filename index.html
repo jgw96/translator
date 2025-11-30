@@ -1,31 +1,37 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Translator</title>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Translator</title>
+    <link rel="stylesheet" href="styles.css" />
 
-  <link rel="stylesheet" href="styles.css">
+    <!-- theme color for dark mode-->
+    <meta
+      name="theme-color"
+      content="#222226"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta
+      name="background-color"
+      content="#222226"
+      media="(prefers-color-scheme: dark)"
+    />
 
-  <!-- theme color for dark mode-->
-  <meta name="theme-color" content="#222226" media="(prefers-color-scheme: dark)">
-  <meta name="background-color" content="#222226" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="background-color" content="#ffffff" />
 
-  <meta name="theme-color" content="#ffffff">
-  <meta name="background-color" content="#ffffff">
+    <link rel="manifest" href="manifest.json" />
+  </head>
 
-
-  <link rel="manifest" href="manifest.json">
-</head>
-
-<body>
-  <!-- <header>
+  <body>
+    <!-- <header>
     <h1>Translator</h1>
   </header> -->
 
-  <main>
-    <!-- <div id="toolbar">
+    <main>
+      <!-- <div id="toolbar">
       <div id="main-actions">
         <gtk-select placeholder="Select target language" value="en" id="target-language">
         </gtk-select>
@@ -34,63 +40,73 @@
       </div>
     </div> -->
 
-    <div id="container">
-      <section id="input-section">
-        <gtk-textarea id="input-text" placeholder="Enter text to translate..."></gtk-textarea>
-        <div id="textarea-actions">
-          <div id="file-controls">
-            <gtk-button id="upload-button">Upload File</gtk-button>
+      <div id="container">
+        <section id="input-section">
+          <gtk-textarea
+            id="input-text"
+            placeholder="Enter text to translate..."
+          ></gtk-textarea>
+          <div id="textarea-actions">
+            <div id="file-controls">
+              <gtk-button id="upload-button">Upload File</gtk-button>
+            </div>
+
+            <div id="audio-controls">
+              <gtk-button suggested id="record-button">Record</gtk-button>
+              <gtk-button id="stop-button" disabled>Stop</gtk-button>
+            </div>
           </div>
+        </section>
 
+        <section id="action-section">
+          <gtk-select placeholder="Select target language" id="target-language">
+          </gtk-select>
 
-          <div id="audio-controls">
-            <gtk-button suggested id="record-button">Record</gtk-button>
-            <gtk-button id="stop-button" disabled>Stop</gtk-button>
+          <gtk-button suggested id="translate-button">Translate</gtk-button>
+        </section>
+
+        <section id="output-section">
+          <gtk-textarea
+            outline
+            id="output-text"
+            placeholder="Translated text will appear here..."
+            readonly
+          ></gtk-textarea>
+          <div id="output-actions">
+            <gtk-button id="copy-button">Copy</gtk-button>
+            <gtk-button id="share-button">Share</gtk-button>
+
+            <gtk-button id="clear-button">Clear</gtk-button>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+    </main>
 
-      <section id="action-section">
-        <gtk-select placeholder="Select target language" id="target-language">
-        </gtk-select>
+    <gtk-toast id="target-toast"></gtk-toast>
 
-        <gtk-button suggested id="translate-button">Translate</gtk-button>
-      </section>
+    <script type="module" src="src/main.mjs"></script>
+    <script type="module" src="src/components/gtk-button.mjs"></script>
+    <script type="module" src="src/components/gtk-select.mjs"></script>
+    <script type="module" src="src/components/gtk-textarea.mjs"></script>
+    <script type="module" src="src/components/gtk-toast.mjs"></script>
 
-      <section id="output-section">
-        <gtk-textarea outline id="output-text" placeholder="Translated text will appear here..." readonly></gtk-textarea>
-        <div id="output-actions">
-          <gtk-button id="copy-button">Copy</gtk-button>
-          <gtk-button id="share-button">Share</gtk-button>
-
-          <gtk-button id="clear-button">Clear</gtk-button>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <gtk-toast id="target-toast"></gtk-toast>
-
-  <script type="module" src="src/main.mjs"></script>
-  <script type="module" src="src/components/gtk-button.mjs"></script>
-  <script type="module" src="src/components/gtk-select.mjs"></script>
-  <script type="module" src="src/components/gtk-textarea.mjs"></script>
-  <script type="module" src="src/components/gtk-toast.mjs"></script>
-
-  <script>
-    // Register Service Worker for offline support
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch((error) => {
-            console.error('Service Worker registration failed:', error);
-          });
-      });
-    }
-  </script>
-</body>
-
+    <script>
+      // Register Service Worker for offline support
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/service-worker.js')
+            .then((registration) => {
+              console.log(
+                'Service Worker registered with scope:',
+                registration.scope
+              );
+            })
+            .catch((error) => {
+              console.error('Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
+  </body>
 </html>
