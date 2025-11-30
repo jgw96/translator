@@ -92,6 +92,29 @@ historyButton.addEventListener('click', () => {
   historyDrawer.show();
 });
 
+// Listen for restore-translation events from history component
+document.addEventListener('restore-translation', (event) => {
+  const { sourceText, translatedText, sourceLang, targetLang } = event.detail;
+
+  // Set the input and output text
+  inputTextarea.value = sourceText;
+  outputTextarea.value = translatedText;
+
+  // Set the language selectors
+  if (sourceLang) {
+    sourceLanguageSelect.value = sourceLang;
+  }
+  if (targetLang) {
+    targetLanguageSelect.value = targetLang;
+  }
+
+  // Enable output buttons since we have translated text
+  enableDisableOutputButtons(false);
+
+  // Close the history drawer
+  historyDrawer.close();
+});
+
 inputTextarea.onchange = async (event) => {
   console.log('Input textarea changed:', event);
   const text = event.target.value;
