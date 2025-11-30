@@ -79,6 +79,10 @@ gtk-textarea::part(textarea) {
   height: 76vh;
 }
 
+#translate-button, #translate-button::part(button) {
+  width: 100%;
+}
+
 #action-section {
   display: flex;
   flex-direction: column;

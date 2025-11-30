@@ -273,6 +273,7 @@ export class GtkButton extends LitElement {
         type=${this.type}
         ?disabled=${this.disabled || this.loading}
         @click=${this._handleClick}
+        part="button"
       >
         ${this.loading ? html`<span class="spinner"></span>` : ''}
         <slot name="icon"></slot>
