@@ -1,9 +1,5 @@
-import { translateText } from './translation-service.mjs';
-import {
-  recordAudio,
-  stopRecording,
-  transcribeAudio,
-} from './transcribe-service.mjs';
+import { translateText } from './translation-service.js';
+import { transcribeAudio } from './transcribe-service.js';
 
 document.querySelector('gtk-select').items = [
   { value: 'en', label: 'English' },
@@ -51,44 +47,20 @@ translateButton.addEventListener('click', async () => {
   }
 });
 
-const recordButton = document.getElementById('record-button');
-const stopButton = document.getElementById('stop-button');
-// const transcribeButton = document.getElementById('transcribe-button');
+const recordComponent = document.querySelector('app-record');
 const fileUploadButton = document.getElementById('upload-button');
 
-// transcribeButton.disabled = true;
+// Listen for transcription events from the app-record component
+recordComponent.addEventListener('transcription-chunk', (event) => {
+  inputTextarea.value = event.detail.text;
+});
 
-recordButton.addEventListener('click', async () => {
-  recordButton.disabled = true;
-  recordButton.loading = true;
-  stopButton.disabled = false;
-  // blob = await recordAudio();
-  // console.log('Recorded audio blob:', blob);
-
-  const blob = await recordAudio();
-  console.log('Recording ended. Blob:', blob);
-
-  recordButton.loading = false;
-  stopButton.loading = true;
-
-  const stream = await transcribeAudio(blob);
-  console.log(`Transcription stream:`, stream);
-
-  for await (const chunk of stream) {
-    console.log(chunk);
-    inputTextarea.value += chunk;
-  }
-
-  stopButton.loading = false;
-
+recordComponent.addEventListener('transcription-complete', () => {
   enableDisableOutputButtons(false);
 });
 
-stopButton.addEventListener('click', async () => {
-  stopButton.disabled = true;
-  recordButton.disabled = false;
-
-  await stopRecording();
+recordComponent.addEventListener('transcription-error', (event) => {
+  console.error('Transcription error:', event.detail.error);
 });
 
 // transcribeButton.addEventListener('click', async () => {
@@ -162,7 +134,7 @@ fileUploadButton.addEventListener('click', async () => {
     }
   } else if (fileData.type.startsWith('image/')) {
     console.log('Image file selected. Image processing not implemented yet.');
-    const { getTextFromImage } = await import('./image-service.mjs');
+    const { getTextFromImage } = await import('./image-service.js');
     const textStream = await getTextFromImage(fileData);
     console.log(`Text extraction stream:`, textStream);
     for await (const chunk of textStream) {

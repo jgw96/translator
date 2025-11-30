@@ -52,8 +52,7 @@
             </div>
 
             <div id="audio-controls">
-              <gtk-button suggested id="record-button">Record</gtk-button>
-              <gtk-button id="stop-button" disabled>Stop</gtk-button>
+              <app-record></app-record>
             </div>
           </div>
         </section>
@@ -84,11 +83,12 @@
 
     <gtk-toast id="target-toast"></gtk-toast>
 
-    <script type="module" src="src/main.mjs"></script>
-    <script type="module" src="src/components/gtk-button.mjs"></script>
-    <script type="module" src="src/components/gtk-select.mjs"></script>
-    <script type="module" src="src/components/gtk-textarea.mjs"></script>
-    <script type="module" src="src/components/gtk-toast.mjs"></script>
+    <script type="module" src="src/main.js"></script>
+    <script type="module" src="src/components/gtk-button.js"></script>
+    <script type="module" src="src/components/gtk-select.js"></script>
+    <script type="module" src="src/components/gtk-textarea.js"></script>
+    <script type="module" src="src/components/gtk-toast.js"></script>
+    <script type="module" src="src/components/app-record.js"></script>
 
     <script>
       // Register Service Worker for offline support
