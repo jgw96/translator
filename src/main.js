@@ -6,8 +6,72 @@ const langs = [
   { value: 'es', label: 'Spanish' },
   { value: 'fr', label: 'French' },
   { value: 'de', label: 'German' },
-  { value: 'zh', label: 'Chinese' },
+  { value: 'it', label: 'Italian' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'nl', label: 'Dutch' },
+  { value: 'pl', label: 'Polish' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'uk', label: 'Ukrainian' },
   { value: 'ja', label: 'Japanese' },
+  { value: 'ko', label: 'Korean' },
+  { value: 'zh', label: 'Chinese (Simplified)' },
+  { value: 'zh-TW', label: 'Chinese (Traditional)' },
+  { value: 'ar', label: 'Arabic' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'bn', label: 'Bengali' },
+  { value: 'tr', label: 'Turkish' },
+  { value: 'vi', label: 'Vietnamese' },
+  { value: 'th', label: 'Thai' },
+  { value: 'id', label: 'Indonesian' },
+  { value: 'ms', label: 'Malay' },
+  { value: 'tl', label: 'Tagalog' },
+  { value: 'sv', label: 'Swedish' },
+  { value: 'da', label: 'Danish' },
+  { value: 'no', label: 'Norwegian' },
+  { value: 'fi', label: 'Finnish' },
+  { value: 'el', label: 'Greek' },
+  { value: 'he', label: 'Hebrew' },
+  { value: 'cs', label: 'Czech' },
+  { value: 'sk', label: 'Slovak' },
+  { value: 'hu', label: 'Hungarian' },
+  { value: 'ro', label: 'Romanian' },
+  { value: 'bg', label: 'Bulgarian' },
+  { value: 'hr', label: 'Croatian' },
+  { value: 'sr', label: 'Serbian' },
+  { value: 'sl', label: 'Slovenian' },
+  { value: 'et', label: 'Estonian' },
+  { value: 'lv', label: 'Latvian' },
+  { value: 'lt', label: 'Lithuanian' },
+  { value: 'ca', label: 'Catalan' },
+  { value: 'eu', label: 'Basque' },
+  { value: 'gl', label: 'Galician' },
+  { value: 'cy', label: 'Welsh' },
+  { value: 'ga', label: 'Irish' },
+  { value: 'mt', label: 'Maltese' },
+  { value: 'is', label: 'Icelandic' },
+  { value: 'af', label: 'Afrikaans' },
+  { value: 'sw', label: 'Swahili' },
+  { value: 'am', label: 'Amharic' },
+  { value: 'ta', label: 'Tamil' },
+  { value: 'te', label: 'Telugu' },
+  { value: 'kn', label: 'Kannada' },
+  { value: 'ml', label: 'Malayalam' },
+  { value: 'mr', label: 'Marathi' },
+  { value: 'gu', label: 'Gujarati' },
+  { value: 'pa', label: 'Punjabi' },
+  { value: 'ur', label: 'Urdu' },
+  { value: 'fa', label: 'Persian' },
+  { value: 'ne', label: 'Nepali' },
+  { value: 'si', label: 'Sinhala' },
+  { value: 'my', label: 'Burmese' },
+  { value: 'km', label: 'Khmer' },
+  { value: 'lo', label: 'Lao' },
+  { value: 'ka', label: 'Georgian' },
+  { value: 'hy', label: 'Armenian' },
+  { value: 'az', label: 'Azerbaijani' },
+  { value: 'kk', label: 'Kazakh' },
+  { value: 'uz', label: 'Uzbek' },
+  { value: 'mn', label: 'Mongolian' },
 ];
 
 document.querySelector('gtk-select#source-language').items = langs;
@@ -20,6 +84,13 @@ const outputTextarea = document.getElementById('output-text');
 const targetLanguageSelect = document.getElementById('target-language');
 const translateButton = document.getElementById('translate-button');
 const sourceLanguageSelect = document.getElementById('source-language');
+const historyButton = document.getElementById('history-button');
+const historyDrawer = document.getElementById('history-drawer');
+console.log('History drawer:', historyDrawer);
+
+historyButton.addEventListener('click', () => {
+  historyDrawer.show();
+});
 
 inputTextarea.onchange = async (event) => {
   console.log('Input textarea changed:', event);
@@ -34,10 +105,13 @@ inputTextarea.onchange = async (event) => {
 translateButton.addEventListener('click', async () => {
   translateButton.loading = true;
 
+  outputTextarea.value = '';
+
   try {
     const text =
       inputTextarea.value ||
       'Hello, world! This is a test to see if we can detect the language of this text.';
+
     const translationStream = await translateText(
       text,
       targetLanguageSelect.value
@@ -54,6 +128,15 @@ translateButton.addEventListener('click', async () => {
     translationStream.translator.destroy();
 
     enableDisableOutputButtons(false);
+
+    const { storeTranslation } = await import('./storage-service.js');
+
+    storeTranslation(
+      text,
+      outputTextarea.value, // placeholder, will update as we get chunks
+      sourceLanguageSelect.value,
+      targetLanguageSelect.value
+    );
   } catch (err) {
     console.error('Translation error:', err);
     translateButton.loading = false;

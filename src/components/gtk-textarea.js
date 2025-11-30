@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import './gtk-speaker.js';
 
 export class GtkTextarea extends LitElement {
   static properties = {
@@ -13,6 +14,9 @@ export class GtkTextarea extends LitElement {
     error: { type: Boolean, reflect: true },
     warning: { type: Boolean, reflect: true },
     success: { type: Boolean, reflect: true },
+    // TTS support
+    speakable: { type: Boolean, reflect: true },
+    voice: { type: String },
   };
 
   static styles = css`
@@ -26,15 +30,22 @@ export class GtkTextarea extends LitElement {
       flex-direction: column;
     }
 
+    .textarea-container {
+      position: relative;
+    }
+
     textarea {
       font-family: inherit;
       font-size: 15px;
       line-height: 1.5;
       min-height: 100px;
       padding: 12px;
+      padding-right: 44px; /* Make room for the speaker button */
       border-radius: 12px;
       border: none;
       resize: vertical;
+      width: 100%;
+      box-sizing: border-box;
 
       /* GTK4 Adwaita view style background */
       background-color: color-mix(in srgb, currentColor 7%, transparent);
@@ -45,6 +56,13 @@ export class GtkTextarea extends LitElement {
         background-color 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
         box-shadow 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
         outline 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .speaker-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 1;
     }
 
     textarea::placeholder {
@@ -257,22 +275,36 @@ export class GtkTextarea extends LitElement {
     this.error = false;
     this.warning = false;
     this.success = false;
+    this.speakable = false;
+    this.voice = 'af_heart';
   }
 
   render() {
     return html`
       <div class="textarea-wrapper">
-        <textarea
-          .value=${this.value}
-          placeholder=${this.placeholder}
-          ?disabled=${this.disabled}
-          ?readonly=${this.readonly}
-          rows=${this.rows}
-          maxlength=${this.maxlength ?? ''}
-          @input=${this._handleInput}
-          @change=${this._handleChange}
-          part="textarea"
-        ></textarea>
+        <div class="textarea-container">
+          <textarea
+            .value=${this.value}
+            placeholder=${this.placeholder}
+            ?disabled=${this.disabled}
+            ?readonly=${this.readonly}
+            rows=${this.rows}
+            maxlength=${this.maxlength ?? ''}
+            @input=${this._handleInput}
+            @change=${this._handleChange}
+            part="textarea"
+          ></textarea>
+          ${this.speakable
+            ? html`
+                <gtk-speaker
+                  class="speaker-button"
+                  .text=${this.value}
+                  .voice=${this.voice}
+                  ?disabled=${this.disabled || !this.value}
+                ></gtk-speaker>
+              `
+            : ''}
+        </div>
       </div>
     `;
   }

@@ -15,6 +15,7 @@ export class GtkSelect extends LitElement {
   static styles = css`
     :host {
       display: inline-block;
+      width: 100%;
     }
 
     :host([disabled]) {
@@ -25,6 +26,7 @@ export class GtkSelect extends LitElement {
       position: relative;
       display: inline-flex;
       align-items: center;
+      width: 100%;
     }
 
     select {
@@ -32,6 +34,7 @@ export class GtkSelect extends LitElement {
       font-size: 15px;
       font-weight: 500;
       min-height: 34px;
+      width: 100%;
       padding: 6px 32px 6px 12px;
       border-radius: 6px;
       border: none;
