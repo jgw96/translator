@@ -10,24 +10,29 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "typecheck:sw": "tsc --noEmit -p tsconfig.sw.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.8.0",
+    "@huggingface/transformers": "^4.0.0-next.4",
     "franc": "^6.2.0",
     "idb-keyval": "^6.2.2",
     "kokoro-js": "^1.2.1",
-    "lit": "^3.3.1"
+    "lit": "^3.3.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.7.3",
-    "vite": "^7.2.4"
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   }
 }

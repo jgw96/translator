@@ -3,17 +3,19 @@
  * Uses the kokoro-js library for on-device speech synthesis
  */
 
-/* global Audio */
+import type { KokoroTTS } from 'kokoro-js';
 
-let ttsInstance = null;
-let loadingPromise = null;
+type ProgressCallback = (progress: Record<string, unknown>) => void;
+
+let ttsInstance: KokoroTTS | null = null;
+let loadingPromise: Promise<KokoroTTS> | null = null;
 
 /**
  * Get or create the TTS instance (singleton pattern)
- * @param {Function} progressCallback - Optional callback for loading progress
- * @returns {Promise<import('kokoro-js').KokoroTTS>}
  */
-export async function getTTSInstance(progressCallback = null) {
+export async function getTTSInstance(
+  progressCallback: ProgressCallback | null = null
+): Promise<KokoroTTS> {
   if (ttsInstance) {
     return ttsInstance;
   }
@@ -29,7 +31,7 @@ export async function getTTSInstance(progressCallback = null) {
       'onnx-community/Kokoro-82M-v1.0-ONNX',
       {
         dtype: 'q8', // Good balance of quality and size (92.4 MB)
-        progress_callback: progressCallback,
+        progress_callback: progressCallback ?? undefined,
       }
     );
 
@@ -39,31 +41,39 @@ export async function getTTSInstance(progressCallback = null) {
   return loadingPromise;
 }
 
+interface GenerateSpeechOptions {
+  voice?: string;
+  onProgress?: ProgressCallback | null;
+}
+
 /**
  * Generate speech from text
- * @param {string} text - The text to convert to speech
- * @param {Object} options - Generation options
- * @param {string} options.voice - Voice to use (default: 'af_heart')
- * @param {Function} options.onProgress - Progress callback during model loading
- * @returns {Promise<{audio: Float32Array, sampling_rate: number}>}
  */
-export async function generateSpeech(text, options = {}) {
+export async function generateSpeech(
+  text: string,
+  options: GenerateSpeechOptions = {}
+): Promise<{ audio: Float32Array; sampling_rate: number; toBlob: () => Blob }> {
   const { voice = 'af_heart', onProgress = null } = options;
 
   const tts = await getTTSInstance(onProgress);
 
-  const audio = await tts.generate(text, { voice });
+  const audio = await tts.generate(text, { voice } as Record<string, unknown>);
 
   return audio;
 }
 
+interface SpeakTextOptions {
+  voice?: string;
+  onProgress?: ProgressCallback | null;
+}
+
 /**
  * Play generated audio directly
- * @param {string} text - The text to speak
- * @param {Object} options - Generation options
- * @returns {Promise<HTMLAudioElement>} - The audio element being played
  */
-export async function speakText(text, options = {}) {
+export async function speakText(
+  text: string,
+  options: SpeakTextOptions = {}
+): Promise<HTMLAudioElement> {
   const audio = await generateSpeech(text, options);
 
   // Create audio blob and play it
@@ -81,17 +91,16 @@ export async function speakText(text, options = {}) {
 
 /**
  * List available voices
- * @returns {Promise<string[]>}
  */
-export async function listVoices() {
+export async function listVoices(): Promise<string[]> {
   const tts = await getTTSInstance();
-  return tts.list_voices();
+  return tts.list_voices() as unknown as string[];
 }
 
 /**
  * Default voices categorized by accent and gender
  */
-export const VOICES = {
+export const VOICES: Record<string, Record<string, string[]>> = {
   american: {
     female: [
       'af_heart',

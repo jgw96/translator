@@ -1,13 +1,14 @@
-import { LitElement, html, css } from 'lit';
-import { getTranslationHistory } from '../storage-service.js';
+import { LitElement, html, css, type TemplateResult } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import {
+  getTranslationHistory,
+  type TranslationEntry,
+} from '../storage-service';
 
 /**
  * Converts a language code to its human-readable name.
- * @param {string} code - The language code (e.g., 'en', 'es', 'fr')
- * @param {string} [displayLocale='en'] - The locale to use for displaying the name
- * @returns {string} The human-readable language name
  */
-export function getLanguageName(code, displayLocale = 'en') {
+export function getLanguageName(code: string, displayLocale = 'en'): string {
   try {
     const displayNames = new Intl.DisplayNames([displayLocale], {
       type: 'language',
@@ -22,10 +23,9 @@ export function getLanguageName(code, displayLocale = 'en') {
   }
 }
 
+@customElement('translation-history')
 export class TranslationHistory extends LitElement {
-  static properties = {
-    history: { type: Array },
-  };
+  @property({ attribute: false }) history: TranslationEntry[] = [];
 
   static styles = css`
     :host {
@@ -115,15 +115,14 @@ export class TranslationHistory extends LitElement {
 
   constructor() {
     super();
-    this.history = [];
     this.loadHistory();
   }
 
-  async loadHistory() {
+  async loadHistory(): Promise<void> {
     this.history = await getTranslationHistory();
   }
 
-  _onEntryClick(entry) {
+  private _onEntryClick(entry: TranslationEntry): void {
     this.dispatchEvent(
       new CustomEvent('restore-translation', {
         detail: {
@@ -138,7 +137,7 @@ export class TranslationHistory extends LitElement {
     );
   }
 
-  render() {
+  render(): TemplateResult {
     return html`
       ${this.history.length === 0
         ? html`<p id="no">No translation history available.</p>`
@@ -179,4 +178,8 @@ export class TranslationHistory extends LitElement {
   }
 }
 
-customElements.define('translation-history', TranslationHistory);
+declare global {
+  interface HTMLElementTagNameMap {
+    'translation-history': TranslationHistory;
+  }
+}

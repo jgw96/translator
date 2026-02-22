@@ -1,20 +1,22 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, type TemplateResult } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
+@customElement('gtk-button')
 export class GtkButton extends LitElement {
-  static properties = {
-    disabled: { type: Boolean, reflect: true },
-    loading: { type: Boolean, reflect: true },
-    type: { type: String },
-    // Style variants
-    suggested: { type: Boolean, reflect: true },
-    destructive: { type: Boolean, reflect: true },
-    flat: { type: Boolean, reflect: true },
-    circular: { type: Boolean, reflect: true },
-    pill: { type: Boolean, reflect: true },
-    raised: { type: Boolean, reflect: true },
-    // Icon support
-    iconOnly: { type: Boolean, reflect: true, attribute: 'icon-only' },
-  };
+  @property({ type: Boolean, reflect: true }) disabled = false;
+  @property({ type: Boolean, reflect: true }) loading = false;
+  @property({ type: String }) type: 'button' | 'submit' | 'reset' | 'menu' =
+    'button';
+  // Style variants
+  @property({ type: Boolean, reflect: true }) suggested = false;
+  @property({ type: Boolean, reflect: true }) destructive = false;
+  @property({ type: Boolean, reflect: true }) flat = false;
+  @property({ type: Boolean, reflect: true }) circular = false;
+  @property({ type: Boolean, reflect: true }) pill = false;
+  @property({ type: Boolean, reflect: true }) raised = false;
+  // Icon support
+  @property({ type: Boolean, reflect: true, attribute: 'icon-only' }) iconOnly =
+    false;
 
   static styles = css`
     :host {
@@ -253,21 +255,7 @@ export class GtkButton extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
-    this.disabled = false;
-    this.loading = false;
-    this.type = 'button';
-    this.suggested = false;
-    this.destructive = false;
-    this.flat = false;
-    this.circular = false;
-    this.pill = false;
-    this.raised = false;
-    this.iconOnly = false;
-  }
-
-  render() {
+  render(): TemplateResult {
     return html`
       <button
         type=${this.type}
@@ -284,7 +272,7 @@ export class GtkButton extends LitElement {
     `;
   }
 
-  _handleClick(e) {
+  private _handleClick(e: Event): void {
     if (this.disabled || this.loading) {
       e.preventDefault();
       e.stopPropagation();
@@ -300,13 +288,17 @@ export class GtkButton extends LitElement {
     );
   }
 
-  focus() {
-    this.shadowRoot.querySelector('button')?.focus();
+  focus(): void {
+    this.shadowRoot!.querySelector('button')?.focus();
   }
 
-  blur() {
-    this.shadowRoot.querySelector('button')?.blur();
+  blur(): void {
+    this.shadowRoot!.querySelector('button')?.blur();
   }
 }
 
-customElements.define('gtk-button', GtkButton);
+declare global {
+  interface HTMLElementTagNameMap {
+    'gtk-button': GtkButton;
+  }
+}

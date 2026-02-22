@@ -1,49 +1,54 @@
-import { transcribeAudio as transcribeWithPolyfill } from './polyfills/transcription.js';
+import { transcribeAudio as transcribeWithPolyfill } from './polyfills/transcription.ts';
 
-let audioStream = null;
-let recorder = null;
+import type { GtkToast } from './components/gtk-toast';
 
-let currentBlob = null;
+let audioStream: MediaStream | null = null;
+let recorder: MediaRecorder | null = null;
 
-export async function transcribeAudio(blob) {
+let currentBlob: Blob | null = null;
+
+export async function transcribeAudio(
+  blob: Blob
+): Promise<AsyncIterable<string> | undefined> {
   try {
     const stream = await transcribeWithPolyfill(blob);
     return stream;
   } catch (error) {
     console.error('Error transcribing audio:', error);
 
-    const toast = document.getElementById('target-toast');
+    const toast = document.getElementById('target-toast') as GtkToast | null;
     if (toast) {
       toast.show('Error during transcription. Please try again.', {
         priority: 'high',
         dismissible: true,
       });
     }
+    return undefined;
   }
 }
 
-export async function recordAudio() {
+export async function recordAudio(): Promise<Blob> {
   try {
     if (!audioStream) {
       audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     }
 
-    const chunks = [];
+    const chunks: Blob[] = [];
 
     if (!recorder) {
       recorder = new MediaRecorder(audioStream);
     }
 
-    return new Promise((resolve, reject) => {
-      recorder.ondataavailable = (event) => {
+    return new Promise<Blob>((resolve, reject) => {
+      recorder!.ondataavailable = (event: BlobEvent) => {
         chunks.push(event.data);
       };
 
-      recorder.onstop = () => {
-        const audioBlob = new Blob(chunks, { type: recorder.mimeType });
+      recorder!.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: recorder!.mimeType });
 
         // quit the stream
-        audioStream.getTracks().forEach((track) => track.stop());
+        audioStream!.getTracks().forEach((track) => track.stop());
         audioStream = null;
         recorder = null;
 
@@ -53,16 +58,16 @@ export async function recordAudio() {
         resolve(audioBlob);
       };
 
-      recorder.onerror = (event) => {
-        reject(event.error);
+      recorder!.onerror = (event: Event) => {
+        reject(event);
       };
 
-      recorder.start();
+      recorder!.start();
     });
   } catch (error) {
     console.error('Error recording audio:', error);
 
-    const toast = document.getElementById('target-toast');
+    const toast = document.getElementById('target-toast') as GtkToast | null;
     if (toast) {
       toast.show('Error during recording. Please try again.', {
         priority: 'high',
@@ -74,9 +79,9 @@ export async function recordAudio() {
   }
 }
 
-export async function stopRecording() {
+export async function stopRecording(): Promise<void> {
   if (recorder && recorder.state === 'recording') {
-    await recorder.stop();
+    recorder.stop();
   }
 
   console.log('currentblob:', currentBlob);

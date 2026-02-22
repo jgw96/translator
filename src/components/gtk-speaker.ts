@@ -1,18 +1,20 @@
-import { LitElement, html, css } from 'lit';
-import { speakText, DEFAULT_VOICE } from '../tts-service.js';
+import { LitElement, html, css, type TemplateResult } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import { speakText, DEFAULT_VOICE } from '../tts-service.ts';
 
 /**
  * A speaker button component for text-to-speech functionality
  * Uses Kokoro TTS for on-device speech synthesis
  */
+@customElement('gtk-speaker')
 export class GtkSpeaker extends LitElement {
-  static properties = {
-    text: { type: String },
-    voice: { type: String },
-    disabled: { type: Boolean, reflect: true },
-    loading: { type: Boolean, reflect: true, state: true },
-    playing: { type: Boolean, reflect: true, state: true },
-  };
+  @property({ type: String }) text = '';
+  @property({ type: String }) voice = DEFAULT_VOICE;
+  @property({ type: Boolean, reflect: true }) disabled = false;
+  @state() loading = false;
+  @state() playing = false;
+
+  private _audioElement: HTMLAudioElement | null = null;
 
   static styles = css`
     :host {
@@ -127,17 +129,7 @@ export class GtkSpeaker extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
-    this.text = '';
-    this.voice = DEFAULT_VOICE;
-    this.disabled = false;
-    this.loading = false;
-    this.playing = false;
-    this._audioElement = null;
-  }
-
-  render() {
+  render(): TemplateResult {
     return html`
       <button
         @click=${this._handleClick}
@@ -164,7 +156,7 @@ export class GtkSpeaker extends LitElement {
     `;
   }
 
-  _renderSpeakerIcon() {
+  private _renderSpeakerIcon(): TemplateResult {
     return html`
       <svg
         width="16"
@@ -180,7 +172,7 @@ export class GtkSpeaker extends LitElement {
     `;
   }
 
-  _renderStopIcon() {
+  private _renderStopIcon(): TemplateResult {
     return html`
       <svg
         width="16"
@@ -194,7 +186,7 @@ export class GtkSpeaker extends LitElement {
     `;
   }
 
-  async _handleClick() {
+  private async _handleClick(): Promise<void> {
     // If already playing, stop
     if (this.playing && this._audioElement) {
       this._stopAudio();
@@ -268,7 +260,7 @@ export class GtkSpeaker extends LitElement {
     }
   }
 
-  _stopAudio() {
+  private _stopAudio(): void {
     if (this._audioElement) {
       this._audioElement.pause();
       this._audioElement.currentTime = 0;
@@ -277,10 +269,14 @@ export class GtkSpeaker extends LitElement {
     this.playing = false;
   }
 
-  disconnectedCallback() {
+  disconnectedCallback(): void {
     super.disconnectedCallback();
     this._stopAudio();
   }
 }
 
-customElements.define('gtk-speaker', GtkSpeaker);
+declare global {
+  interface HTMLElementTagNameMap {
+    'gtk-speaker': GtkSpeaker;
+  }
+}

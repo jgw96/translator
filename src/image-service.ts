@@ -1,4 +1,6 @@
-export async function getTextFromImage(imageBlob) {
+export async function getTextFromImage(
+  imageBlob: Blob
+): Promise<AsyncIterable<string> | undefined> {
   try {
     const session = await LanguageModel.create({
       expectedInputs: [{ type: 'image' }],
@@ -17,5 +19,6 @@ export async function getTextFromImage(imageBlob) {
     return stream;
   } catch (error) {
     console.error(`Error: ${error}`);
+    return undefined;
   }
 }

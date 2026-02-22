@@ -1,17 +1,17 @@
-import { LitElement, css, html } from 'lit';
-import './gtk-button.js';
+import { LitElement, css, html, type TemplateResult } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import './gtk-button.ts';
 import {
   recordAudio,
   stopRecording,
   transcribeAudio,
-} from '../transcribe-service.js';
+} from '../transcribe-service.ts';
 
+@customElement('app-record')
 export class AppRecord extends LitElement {
-  static properties = {
-    recording: { type: Boolean, reflect: true },
-    _recordLoading: { type: Boolean, state: true },
-    _stopLoading: { type: Boolean, state: true },
-  };
+  @property({ type: Boolean, reflect: true }) recording = false;
+  @state() _recordLoading = false;
+  @state() _stopLoading = false;
 
   static styles = css`
     :host {
@@ -19,14 +19,7 @@ export class AppRecord extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
-    this.recording = false;
-    this._recordLoading = false;
-    this._stopLoading = false;
-  }
-
-  render() {
+  render(): TemplateResult {
     return html`
       ${this.recording
         ? html`
@@ -73,7 +66,7 @@ export class AppRecord extends LitElement {
     `;
   }
 
-  async _handleRecord() {
+  private async _handleRecord(): Promise<void> {
     this.recording = true;
     this._recordLoading = true;
 
@@ -88,16 +81,18 @@ export class AppRecord extends LitElement {
       console.log(`Transcription stream:`, stream);
 
       let transcribedText = '';
-      for await (const chunk of stream) {
-        console.log(chunk);
-        transcribedText += chunk;
-        this.dispatchEvent(
-          new CustomEvent('transcription-chunk', {
-            detail: { chunk, text: transcribedText },
-            bubbles: true,
-            composed: true,
-          })
-        );
+      if (stream) {
+        for await (const chunk of stream) {
+          console.log(chunk);
+          transcribedText += chunk;
+          this.dispatchEvent(
+            new CustomEvent('transcription-chunk', {
+              detail: { chunk, text: transcribedText },
+              bubbles: true,
+              composed: true,
+            })
+          );
+        }
       }
 
       this._stopLoading = false;
@@ -125,10 +120,14 @@ export class AppRecord extends LitElement {
     }
   }
 
-  async _handleStop() {
+  private async _handleStop(): Promise<void> {
     this.recording = false;
     await stopRecording();
   }
 }
 
-customElements.define('app-record', AppRecord);
+declare global {
+  interface HTMLElementTagNameMap {
+    'app-record': AppRecord;
+  }
+}

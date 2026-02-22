@@ -5,11 +5,19 @@
  * falling back to transformers.js with the NLLB-200 model.
  */
 
-let transformersPipeline = null;
-let transformersTranslator = null;
+import type { TranslationPipeline } from '@huggingface/transformers';
+
+type PipelineFactory = (
+  task: string,
+  model: string,
+  options?: Record<string, unknown>
+) => Promise<TranslationPipeline>;
+
+let transformersPipeline: PipelineFactory | null = null;
+let transformersTranslator: TranslationPipeline | null = null;
 
 // Map standard language codes to NLLB FLORES-200 codes
-const LANG_CODE_TO_NLLB = {
+const LANG_CODE_TO_NLLB: Record<string, string> = {
   // Common languages (ISO 639-1)
   en: 'eng_Latn',
   es: 'spa_Latn',
@@ -222,14 +230,14 @@ const LANG_CODE_TO_NLLB = {
 };
 
 // Reverse map for NLLB to standard codes
-const NLLB_TO_LANG_CODE = Object.fromEntries(
+const NLLB_TO_LANG_CODE: Record<string, string> = Object.fromEntries(
   Object.entries(LANG_CODE_TO_NLLB).map(([k, v]) => [v, k])
 );
 
 /**
  * Convert standard language code to NLLB FLORES-200 code
  */
-function toNLLBCode(langCode) {
+function toNLLBCode(langCode: string): string | null {
   if (!langCode) return null;
 
   // Already NLLB format (contains underscore)
@@ -260,7 +268,7 @@ function toNLLBCode(langCode) {
 /**
  * Check if native Translator API is available
  */
-function isNativeTranslatorAvailable() {
+function isNativeTranslatorAvailable(): boolean {
   return (
     typeof Translator !== 'undefined' && typeof Translator.create === 'function'
   );
@@ -269,17 +277,19 @@ function isNativeTranslatorAvailable() {
 /**
  * Load transformers.js pipeline (lazy loaded)
  */
-async function getTransformersPipeline(progressCallback) {
+async function getTransformersPipeline(
+  progressCallback?: ((progress: Record<string, unknown>) => void) | undefined
+): Promise<TranslationPipeline> {
   if (transformersTranslator) {
     return transformersTranslator;
   }
 
   if (!transformersPipeline) {
     const { pipeline } = await import('@huggingface/transformers');
-    transformersPipeline = pipeline;
+    transformersPipeline = pipeline as unknown as PipelineFactory;
   }
 
-  transformersTranslator = await transformersPipeline(
+  transformersTranslator = await transformersPipeline!(
     'translation',
     'Xenova/nllb-200-distilled-600M',
     {
@@ -294,7 +304,16 @@ async function getTransformersPipeline(progressCallback) {
  * Polyfilled Translator class that mimics the native Translator API
  */
 class PolyfillTranslator {
-  constructor(sourceLanguage, targetLanguage, nativeTranslator = null) {
+  sourceLanguage: string;
+  targetLanguage: string;
+  private _nativeTranslator: NativeTranslator | null;
+  private _useNative: boolean;
+
+  constructor(
+    sourceLanguage: string,
+    targetLanguage: string,
+    nativeTranslator: NativeTranslator | null = null
+  ) {
     this.sourceLanguage = sourceLanguage;
     this.targetLanguage = targetLanguage;
     this._nativeTranslator = nativeTranslator;
@@ -305,7 +324,9 @@ class PolyfillTranslator {
    * Check availability of translation for given language pair
    * @returns {'unavailable' | 'downloadable' | 'downloading' | 'available'}
    */
-  static async availability(options) {
+  static async availability(
+    options: TranslatorAvailabilityOptions
+  ): Promise<'unavailable' | 'downloadable' | 'downloading' | 'available'> {
     const { sourceLanguage, targetLanguage } = options;
 
     // Check native API first
@@ -338,7 +359,9 @@ class PolyfillTranslator {
   /**
    * Create a new Translator instance
    */
-  static async create(options) {
+  static async create(
+    options: TranslatorCreateOptions
+  ): Promise<PolyfillTranslator> {
     const { sourceLanguage, targetLanguage, monitor } = options;
 
     // Try native API first
@@ -371,17 +394,20 @@ class PolyfillTranslator {
 
     // Fall back to transformers.js
     const progressCallback = monitor
-      ? (progress) => {
+      ? (progress: Record<string, unknown>) => {
           if (progress.status === 'progress' && monitor) {
             // Call monitor with a mock object that has addEventListener
             const mockMonitor = {
-              addEventListener: (type, callback) => {
+              addEventListener: (
+                type: string,
+                callback: (e: { loaded: number }) => void
+              ) => {
                 if (type === 'downloadprogress') {
-                  callback({ loaded: progress.progress / 100 });
+                  callback({ loaded: (progress.progress as number) / 100 });
                 }
               },
             };
-            monitor(mockMonitor);
+            monitor(mockMonitor as unknown as AIMonitor);
           }
         }
       : undefined;
@@ -394,7 +420,7 @@ class PolyfillTranslator {
   /**
    * Translate text (non-streaming)
    */
-  async translate(text) {
+  async translate(text: string): Promise<string> {
     if (this._useNative && this._nativeTranslator) {
       return await this._nativeTranslator.translate(text);
     }
@@ -416,25 +442,21 @@ class PolyfillTranslator {
    * Translate text with streaming support
    * Returns an async iterable for compatibility with native API
    */
-  translateStreaming(text) {
+  translateStreaming(text: string): AsyncIterable<string> {
     if (this._useNative && this._nativeTranslator) {
       return this._nativeTranslator.translateStreaming(text);
     }
 
     // transformers.js doesn't support true streaming for this model,
     // so we simulate it by returning the full result
+
     const self = this;
 
     // Return an object that mimics the native streaming API
-    const streamResult = {
+    const streamResult: AsyncIterable<string> = {
       [Symbol.asyncIterator]: async function* () {
         const result = await self.translate(text);
         yield result;
-      },
-      // Also support the readable stream pattern
-      async read() {
-        const result = await self.translate(text);
-        return { value: result, done: true };
       },
     };
 
@@ -451,7 +473,7 @@ class PolyfillTranslator {
   /**
    * Destroy the translator and free resources
    */
-  async destroy() {
+  async destroy(): Promise<void> {
     if (this._useNative && this._nativeTranslator) {
       if (typeof this._nativeTranslator.destroy === 'function') {
         await this._nativeTranslator.destroy();
@@ -463,7 +485,7 @@ class PolyfillTranslator {
 }
 
 // Map ISO 639-3 codes (franc) to ISO 639-1 codes (native API)
-const ISO639_3_TO_1 = {
+const ISO639_3_TO_1: Record<string, string> = {
   eng: 'en',
   spa: 'es',
   fra: 'fr',
@@ -555,7 +577,7 @@ const ISO639_3_TO_1 = {
 /**
  * Convert ISO 639-3 code to ISO 639-1 code
  */
-function iso639_3to1(code) {
+function iso639_3to1(code: string): string | null {
   if (!code || code === 'und') return null;
   return ISO639_3_TO_1[code] || code;
 }
@@ -563,7 +585,7 @@ function iso639_3to1(code) {
 /**
  * Check if native LanguageDetector API is available
  */
-function isNativeLanguageDetectorAvailable() {
+function isNativeLanguageDetectorAvailable(): boolean {
   return (
     typeof LanguageDetector !== 'undefined' &&
     typeof LanguageDetector.create === 'function'
@@ -575,12 +597,17 @@ function isNativeLanguageDetectorAvailable() {
  * Uses native API when available, falls back to franc
  */
 class PolyfillLanguageDetector {
-  constructor(nativeDetector = null) {
+  private _nativeDetector: NativeLanguageDetector | null;
+  private _useNative: boolean;
+
+  constructor(nativeDetector: NativeLanguageDetector | null = null) {
     this._nativeDetector = nativeDetector;
     this._useNative = !!nativeDetector;
   }
 
-  static async create(options) {
+  static async create(
+    options?: LanguageDetectorCreateOptions
+  ): Promise<PolyfillLanguageDetector> {
     // Check if native API is available
     if (isNativeLanguageDetectorAvailable()) {
       try {
@@ -602,7 +629,9 @@ class PolyfillLanguageDetector {
    * Detect language of the given text
    * Returns array of {detectedLanguage, confidence} objects
    */
-  async detect(text) {
+  async detect(
+    text: string
+  ): Promise<Array<{ detectedLanguage: string; confidence: number }>> {
     if (this._useNative && this._nativeDetector) {
       return await this._nativeDetector.detect(text);
     }
@@ -623,7 +652,7 @@ class PolyfillLanguageDetector {
   /**
    * Destroy the detector and free resources
    */
-  async destroy() {
+  async destroy(): Promise<void> {
     if (this._useNative && this._nativeDetector) {
       if (typeof this._nativeDetector.destroy === 'function') {
         await this._nativeDetector.destroy();

@@ -1,16 +1,25 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, type TemplateResult } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
+export type SelectItem =
+  | string
+  | { value: string; label?: string; disabled?: boolean };
+
+export interface SelectGroup {
+  group: string;
+  options: SelectItem[];
+}
+
+@customElement('gtk-select')
 export class GtkSelect extends LitElement {
-  static properties = {
-    items: { type: Array },
-    value: { type: String },
-    placeholder: { type: String },
-    disabled: { type: Boolean, reflect: true },
-    required: { type: Boolean },
-    // Style variants
-    flat: { type: Boolean, reflect: true },
-    inline: { type: Boolean, reflect: true },
-  };
+  @property({ attribute: false }) items: Array<SelectItem | SelectGroup> = [];
+  @property({ type: String }) value = '';
+  @property({ type: String }) placeholder = '';
+  @property({ type: Boolean, reflect: true }) disabled = false;
+  @property({ type: Boolean }) required = false;
+  // Style variants
+  @property({ type: Boolean, reflect: true }) flat = false;
+  @property({ type: Boolean, reflect: true }) inline = false;
 
   static styles = css`
     :host {
@@ -171,18 +180,7 @@ export class GtkSelect extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
-    this.items = [];
-    this.value = '';
-    this.placeholder = '';
-    this.disabled = false;
-    this.required = false;
-    this.flat = false;
-    this.inline = false;
-  }
-
-  render() {
+  render(): TemplateResult {
     return html`
       <div class="select-wrapper">
         <select
@@ -219,7 +217,7 @@ export class GtkSelect extends LitElement {
     `;
   }
 
-  _renderItem(item) {
+  private _renderItem(item: SelectItem | SelectGroup): TemplateResult {
     // Support both object format {value, label, disabled} and string format
     if (typeof item === 'string') {
       return html`
@@ -228,7 +226,7 @@ export class GtkSelect extends LitElement {
     }
 
     // Support grouped options
-    if (item.group && item.options) {
+    if ('group' in item && 'options' in item) {
       return html`
         <optgroup label=${item.group}>
           ${item.options.map((opt) => this._renderItem(opt))}
@@ -236,25 +234,31 @@ export class GtkSelect extends LitElement {
       `;
     }
 
+    const objItem = item as {
+      value: string;
+      label?: string;
+      disabled?: boolean;
+    };
     return html`
       <option
-        value=${item.value}
-        ?disabled=${item.disabled}
-        ?selected=${this.value === item.value}
+        value=${objItem.value}
+        ?disabled=${objItem.disabled}
+        ?selected=${this.value === objItem.value}
       >
-        ${item.label || item.value}
+        ${objItem.label || objItem.value}
       </option>
     `;
   }
 
-  _handleChange(e) {
-    this.value = e.target.value;
+  private _handleChange(e: Event): void {
+    const target = e.target as HTMLSelectElement;
+    this.value = target.value;
     this.dispatchEvent(
       new CustomEvent('change', {
         detail: {
           value: this.value,
-          selectedIndex: e.target.selectedIndex,
-          selectedItem: this.items?.[e.target.selectedIndex] || this.value,
+          selectedIndex: target.selectedIndex,
+          selectedItem: this.items?.[target.selectedIndex] || this.value,
         },
         bubbles: true,
         composed: true,
@@ -262,30 +266,35 @@ export class GtkSelect extends LitElement {
     );
   }
 
-  _handleInput(e) {
+  private _handleInput(e: Event): void {
+    const target = e.target as HTMLSelectElement;
     this.dispatchEvent(
       new CustomEvent('input', {
-        detail: { value: e.target.value },
+        detail: { value: target.value },
         bubbles: true,
         composed: true,
       })
     );
   }
 
-  focus() {
-    this.shadowRoot.querySelector('select')?.focus();
+  focus(): void {
+    this.shadowRoot!.querySelector('select')?.focus();
   }
 
-  blur() {
-    this.shadowRoot.querySelector('select')?.blur();
+  blur(): void {
+    this.shadowRoot!.querySelector('select')?.blur();
   }
 
   // Get the currently selected item object
-  getSelectedItem() {
-    const select = this.shadowRoot.querySelector('select');
+  getSelectedItem(): SelectItem | SelectGroup | null {
+    const select = this.shadowRoot!.querySelector('select');
     if (!select || !this.items?.length) return null;
     return this.items[select.selectedIndex] || null;
   }
 }
 
-customElements.define('gtk-select', GtkSelect);
+declare global {
+  interface HTMLElementTagNameMap {
+    'gtk-select': GtkSelect;
+  }
+}

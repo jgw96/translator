@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "useDefineForClassFields": false,
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*.ts", "vite-env.d.ts"],
+  "exclude": ["node_modules", "dist", "service-worker.ts"]
+}

@@ -1,14 +1,23 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, type TemplateResult } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
+export interface ToastOptions {
+  timeout?: number;
+  action?: string;
+  priority?: 'normal' | 'high';
+  dismissible?: boolean;
+}
+
+@customElement('gtk-toast')
 export class GtkToast extends LitElement {
-  static properties = {
-    message: { type: String },
-    timeout: { type: Number },
-    dismissible: { type: Boolean },
-    action: { type: String },
-    visible: { type: Boolean, reflect: true },
-    priority: { type: String }, // 'normal' | 'high'
-  };
+  @property({ type: String }) message = '';
+  @property({ type: Number }) timeout = 5000;
+  @property({ type: Boolean }) dismissible = true;
+  @property({ type: String }) action = '';
+  @property({ type: Boolean, reflect: true }) visible = false;
+  @property({ type: String }) priority: 'normal' | 'high' = 'normal';
+
+  private _timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   static styles = css`
     :host {
@@ -158,27 +167,16 @@ export class GtkToast extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
-    this.message = '';
-    this.timeout = 5000;
-    this.dismissible = true;
-    this.action = '';
-    this.visible = false;
-    this.priority = 'normal';
-    this._timeoutId = null;
-  }
-
-  connectedCallback() {
+  connectedCallback(): void {
     super.connectedCallback();
   }
 
-  disconnectedCallback() {
+  disconnectedCallback(): void {
     super.disconnectedCallback();
     this._clearTimeout();
   }
 
-  show(message, options = {}) {
+  show(message?: string, options: ToastOptions = {}): void {
     this._clearTimeout();
 
     if (message) {
@@ -209,7 +207,7 @@ export class GtkToast extends LitElement {
     }
   }
 
-  hide() {
+  hide(): void {
     this._clearTimeout();
     this.visible = false;
 
@@ -221,14 +219,14 @@ export class GtkToast extends LitElement {
     );
   }
 
-  _clearTimeout() {
+  private _clearTimeout(): void {
     if (this._timeoutId) {
       clearTimeout(this._timeoutId);
       this._timeoutId = null;
     }
   }
 
-  _handleActionClick() {
+  private _handleActionClick(): void {
     this.dispatchEvent(
       new CustomEvent('action-clicked', {
         bubbles: true,
@@ -239,11 +237,11 @@ export class GtkToast extends LitElement {
     this.hide();
   }
 
-  _handleCloseClick() {
+  private _handleCloseClick(): void {
     this.hide();
   }
 
-  render() {
+  render(): TemplateResult {
     return html`
       <div
         class="toast"
@@ -279,4 +277,8 @@ export class GtkToast extends LitElement {
   }
 }
 
-customElements.define('gtk-toast', GtkToast);
+declare global {
+  interface HTMLElementTagNameMap {
+    'gtk-toast': GtkToast;
+  }
+}

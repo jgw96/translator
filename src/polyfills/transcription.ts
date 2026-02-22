@@ -7,7 +7,28 @@
  * Handles long audio by chunking into 30-second segments with overlap.
  */
 
-let whisperPipeline = null;
+import type { AutomaticSpeechRecognitionPipeline } from '@huggingface/transformers';
+
+type AudioInput = Blob | ArrayBuffer | ArrayBufferView;
+
+interface AudioChunk {
+  audio: Float32Array;
+  startTime: number;
+  endTime: number;
+}
+
+interface TranscriptionOptions {
+  language?: string;
+  task?: string;
+  timestamps?: boolean;
+  onProgress?: (progress: {
+    chunk: number;
+    totalChunks: number;
+    progress: number;
+  }) => void;
+}
+
+let whisperPipeline: AutomaticSpeechRecognitionPipeline | null = null;
 
 // Whisper model constraints
 const WHISPER_SAMPLE_RATE = 16000;
@@ -18,7 +39,7 @@ const WHISPER_OVERLAP_DURATION = 5; // seconds
 /**
  * Check if native multimodal Prompt API is available for audio
  */
-function isNativeTranscriptionAvailable() {
+function isNativeTranscriptionAvailable(): boolean {
   return (
     typeof LanguageModel !== 'undefined' &&
     typeof LanguageModel.create === 'function'
@@ -30,7 +51,7 @@ function isNativeTranscriptionAvailable() {
  * Returns true if LanguageModel API exists - actual audio support
  * will be validated when we try to create a session
  */
-async function checkNativeAudioSupport() {
+async function checkNativeAudioSupport(): Promise<boolean> {
   if (!isNativeTranscriptionAvailable()) {
     return false;
   }
@@ -44,7 +65,9 @@ async function checkNativeAudioSupport() {
 /**
  * Load Whisper pipeline (lazy loaded)
  */
-async function getWhisperPipeline(progressCallback) {
+async function getWhisperPipeline(
+  progressCallback?: ((progress: Record<string, unknown>) => void) | undefined
+): Promise<AutomaticSpeechRecognitionPipeline> {
   if (whisperPipeline) {
     return whisperPipeline;
   }
@@ -66,22 +89,28 @@ async function getWhisperPipeline(progressCallback) {
  * Convert audio blob to Float32Array at 16kHz mono
  * This is required for Whisper model input
  */
-async function audioToFloat32Array(audioData) {
+async function audioToFloat32Array(
+  audioData: AudioInput
+): Promise<Float32Array> {
   // Handle different input types
-  let arrayBuffer;
+  let arrayBuffer: ArrayBuffer;
 
   if (audioData instanceof Blob) {
     arrayBuffer = await audioData.arrayBuffer();
   } else if (audioData instanceof ArrayBuffer) {
     arrayBuffer = audioData;
   } else if (ArrayBuffer.isView(audioData)) {
-    arrayBuffer = audioData.buffer;
+    arrayBuffer = audioData.buffer as ArrayBuffer;
   } else {
     throw new Error('Unsupported audio data type');
   }
 
   // Use AudioContext to decode and resample
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+  const AudioContextClass =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext })
+      .webkitAudioContext;
+  const audioContext = new AudioContextClass({
     sampleRate: WHISPER_SAMPLE_RATE,
   });
 
@@ -91,7 +120,7 @@ async function audioToFloat32Array(audioData) {
     );
 
     // Get audio data as Float32Array
-    let audioData32 = audioBuffer.getChannelData(0);
+    let audioData32: Float32Array = audioBuffer.getChannelData(0);
 
     // If stereo, mix down to mono
     if (audioBuffer.numberOfChannels > 1) {
@@ -135,12 +164,12 @@ async function audioToFloat32Array(audioData) {
  * Split audio into chunks for processing long recordings
  * Uses overlapping chunks to avoid cutting words
  */
-function splitAudioIntoChunks(audioFloat32) {
+function splitAudioIntoChunks(audioFloat32: Float32Array): AudioChunk[] {
   const chunkSamples = WHISPER_CHUNK_DURATION * WHISPER_SAMPLE_RATE;
   const overlapSamples = WHISPER_OVERLAP_DURATION * WHISPER_SAMPLE_RATE;
   const stepSamples = chunkSamples - overlapSamples;
 
-  const chunks = [];
+  const chunks: AudioChunk[] = [];
   let start = 0;
 
   while (start < audioFloat32.length) {
@@ -168,7 +197,7 @@ function splitAudioIntoChunks(audioFloat32) {
  * Remove duplicate text from overlapping chunks
  * Uses simple word-based deduplication
  */
-function mergeChunkTranscriptions(transcriptions) {
+function mergeChunkTranscriptions(transcriptions: string[]): string {
   if (transcriptions.length === 0) return '';
   if (transcriptions.length === 1) return transcriptions[0].trim();
 
@@ -219,7 +248,9 @@ function mergeChunkTranscriptions(transcriptions) {
 /**
  * Create an async iterable that yields chunks as they're transcribed
  */
-function createChunkedStreamingResult(chunksPromise) {
+function createChunkedStreamingResult(
+  chunksPromise: Promise<string[]>
+): AsyncIterable<string> & { text(): Promise<string> } {
   return {
     [Symbol.asyncIterator]: async function* () {
       const chunks = await chunksPromise;
@@ -241,7 +272,9 @@ function createChunkedStreamingResult(chunksPromise) {
 /**
  * Transcribe audio using the native Prompt API
  */
-async function transcribeWithNativeAPI(audioData) {
+async function transcribeWithNativeAPI(
+  audioData: AudioInput
+): Promise<AsyncIterable<string>> {
   const arrayBuffer =
     audioData instanceof Blob ? await audioData.arrayBuffer() : audioData;
 
@@ -254,7 +287,7 @@ async function transcribeWithNativeAPI(audioData) {
       role: 'user',
       content: [
         { type: 'text', value: 'transcribe this audio' },
-        { type: 'audio', value: arrayBuffer },
+        { type: 'audio', value: arrayBuffer as unknown as Blob },
       ],
     },
   ]);
@@ -266,7 +299,10 @@ async function transcribeWithNativeAPI(audioData) {
  * Transcribe audio using Whisper via transformers.js
  * Handles long audio by chunking
  */
-async function transcribeWithWhisper(audioData, options = {}) {
+async function transcribeWithWhisper(
+  audioData: AudioInput,
+  options: TranscriptionOptions = {}
+): Promise<string> {
   const {
     language,
     task = 'transcribe',
@@ -283,7 +319,7 @@ async function transcribeWithWhisper(audioData, options = {}) {
   // Check if we need to chunk the audio
   if (durationSeconds <= WHISPER_MAX_DURATION) {
     // Short audio - process directly
-    const transcribeOptions = {
+    const transcribeOptions: Record<string, unknown> = {
       task,
       return_timestamps: timestamps,
     };
@@ -301,7 +337,7 @@ async function transcribeWithWhisper(audioData, options = {}) {
   const chunks = splitAudioIntoChunks(audioFloat32);
   console.log(`Split into ${chunks.length} chunks`);
 
-  const transcriptions = [];
+  const transcriptions: string[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
@@ -319,7 +355,7 @@ async function transcribeWithWhisper(audioData, options = {}) {
         `(${chunk.startTime.toFixed(1)}s - ${chunk.endTime.toFixed(1)}s)`
     );
 
-    const transcribeOptions = {
+    const transcribeOptions: Record<string, unknown> = {
       task,
       return_timestamps: timestamps,
     };
@@ -347,7 +383,10 @@ async function transcribeWithWhisper(audioData, options = {}) {
 /**
  * Transcribe long audio with streaming progress updates
  */
-async function transcribeWithWhisperStreaming(audioData, options = {}) {
+async function transcribeWithWhisperStreaming(
+  audioData: AudioInput,
+  options: TranscriptionOptions = {}
+): Promise<string[]> {
   const { language, task = 'transcribe', timestamps = false } = options;
 
   const transcriber = await getWhisperPipeline();
@@ -357,7 +396,7 @@ async function transcribeWithWhisperStreaming(audioData, options = {}) {
 
   // Short audio - process directly
   if (durationSeconds <= WHISPER_MAX_DURATION) {
-    const transcribeOptions = {
+    const transcribeOptions: Record<string, unknown> = {
       task,
       return_timestamps: timestamps,
     };
@@ -372,13 +411,13 @@ async function transcribeWithWhisperStreaming(audioData, options = {}) {
 
   // Long audio - process in chunks and yield intermediate results
   const chunks = splitAudioIntoChunks(audioFloat32);
-  const transcriptions = [];
-  const results = [];
+  const transcriptions: string[] = [];
+  const results: string[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
 
-    const transcribeOptions = {
+    const transcribeOptions: Record<string, unknown> = {
       task,
       return_timestamps: timestamps,
     };
@@ -401,7 +440,10 @@ async function transcribeWithWhisperStreaming(audioData, options = {}) {
  * Polyfilled transcription function that mimics the native API
  * Returns a streaming result for compatibility
  */
-export async function transcribeAudio(audioData, options = {}) {
+export async function transcribeAudio(
+  audioData: AudioInput,
+  options: TranscriptionOptions = {}
+): Promise<AsyncIterable<string>> {
   // Check if native API supports audio
   const hasNativeSupport = await checkNativeAudioSupport();
 
@@ -421,7 +463,10 @@ export async function transcribeAudio(audioData, options = {}) {
 /**
  * Transcribe audio and return the full text (non-streaming)
  */
-export async function transcribeAudioToText(audioData, options = {}) {
+export async function transcribeAudioToText(
+  audioData: AudioInput,
+  options: TranscriptionOptions = {}
+): Promise<string> {
   const hasNativeSupport = await checkNativeAudioSupport();
 
   if (hasNativeSupport) {
@@ -445,7 +490,9 @@ export async function transcribeAudioToText(audioData, options = {}) {
 /**
  * Check availability of transcription
  */
-export async function transcriptionAvailability() {
+export async function transcriptionAvailability(): Promise<
+  'available' | 'downloadable'
+> {
   const hasNativeSupport = await checkNativeAudioSupport();
 
   if (hasNativeSupport) {
@@ -463,14 +510,16 @@ export async function transcriptionAvailability() {
 /**
  * Preload the Whisper model
  */
-export async function preloadWhisper(progressCallback) {
+export async function preloadWhisper(
+  progressCallback?: (progress: Record<string, unknown>) => void
+): Promise<void> {
   await getWhisperPipeline(progressCallback);
 }
 
 /**
  * Get estimated duration of audio in seconds
  */
-export async function getAudioDuration(audioData) {
+export async function getAudioDuration(audioData: AudioInput): Promise<number> {
   const audioFloat32 = await audioToFloat32Array(audioData);
   return audioFloat32.length / WHISPER_SAMPLE_RATE;
 }

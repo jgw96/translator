@@ -1,12 +1,20 @@
-import { LitElement, html, css } from 'lit';
+import {
+  LitElement,
+  html,
+  css,
+  type TemplateResult,
+  type PropertyValues,
+} from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 
+@customElement('gtk-drawer')
 export class GtkDrawer extends LitElement {
-  static properties = {
-    open: { type: Boolean, reflect: true },
-    side: { type: String }, // 'left' | 'right'
-    modal: { type: Boolean }, // Whether clicking the backdrop closes the drawer
-    width: { type: String }, // Custom width (default: 320px)
-  };
+  @property({ type: Boolean, reflect: true }) open = false;
+  @property({ type: String }) side: 'left' | 'right' = 'left';
+  @property({ type: Boolean }) modal = true;
+  @property({ type: String }) width = '320px';
+
+  private _boundHandleKeydown = this._handleKeydown.bind(this);
 
   static styles = css`
     :host {
@@ -187,26 +195,17 @@ export class GtkDrawer extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
-    this.open = false;
-    this.side = 'left';
-    this.modal = true;
-    this.width = '320px';
-    this._handleKeydown = this._handleKeydown.bind(this);
-  }
-
-  connectedCallback() {
+  connectedCallback(): void {
     super.connectedCallback();
-    document.addEventListener('keydown', this._handleKeydown);
+    document.addEventListener('keydown', this._boundHandleKeydown);
   }
 
-  disconnectedCallback() {
+  disconnectedCallback(): void {
     super.disconnectedCallback();
-    document.removeEventListener('keydown', this._handleKeydown);
+    document.removeEventListener('keydown', this._boundHandleKeydown);
   }
 
-  updated(changedProperties) {
+  updated(changedProperties: PropertyValues): void {
     if (changedProperties.has('width')) {
       this.style.setProperty('--drawer-width', this.width);
     }
@@ -222,31 +221,31 @@ export class GtkDrawer extends LitElement {
     }
   }
 
-  _handleKeydown(e) {
+  private _handleKeydown(e: KeyboardEvent): void {
     if (e.key === 'Escape' && this.open) {
       this.close();
     }
   }
 
-  _handleBackdropClick() {
+  private _handleBackdropClick(): void {
     if (this.modal) {
       this.close();
     }
   }
 
-  show() {
+  show(): void {
     this.open = true;
   }
 
-  close() {
+  close(): void {
     this.open = false;
   }
 
-  toggle() {
+  toggle(): void {
     this.open = !this.open;
   }
 
-  _dispatchEvent(name) {
+  private _dispatchEvent(name: string): void {
     this.dispatchEvent(
       new CustomEvent(`drawer-${name}`, {
         bubbles: true,
@@ -255,11 +254,11 @@ export class GtkDrawer extends LitElement {
     );
   }
 
-  _hasSlot(name) {
+  private _hasSlot(name: string): boolean {
     return this.querySelector(`[slot="${name}"]`) !== null;
   }
 
-  render() {
+  render(): TemplateResult {
     return html`
       <div class="backdrop" @click=${this._handleBackdropClick}></div>
       <aside class="drawer" role="dialog" aria-modal="true" part="drawer">
@@ -303,4 +302,8 @@ export class GtkDrawer extends LitElement {
   }
 }
 
-customElements.define('gtk-drawer', GtkDrawer);
+declare global {
+  interface HTMLElementTagNameMap {
+    'gtk-drawer': GtkDrawer;
+  }
+}

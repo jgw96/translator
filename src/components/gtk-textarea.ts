@@ -1,23 +1,23 @@
-import { LitElement, html, css } from 'lit';
-import './gtk-speaker.js';
+import { LitElement, html, css, type TemplateResult } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import './gtk-speaker.ts';
 
+@customElement('gtk-textarea')
 export class GtkTextarea extends LitElement {
-  static properties = {
-    value: { type: String },
-    placeholder: { type: String },
-    disabled: { type: Boolean, reflect: true },
-    readonly: { type: Boolean, reflect: true },
-    rows: { type: Number },
-    maxlength: { type: Number },
-    monospace: { type: Boolean, reflect: true },
-    // Validation states
-    error: { type: Boolean, reflect: true },
-    warning: { type: Boolean, reflect: true },
-    success: { type: Boolean, reflect: true },
-    // TTS support
-    speakable: { type: Boolean, reflect: true },
-    voice: { type: String },
-  };
+  @property({ type: String }) value = '';
+  @property({ type: String }) placeholder = '';
+  @property({ type: Boolean, reflect: true }) disabled = false;
+  @property({ type: Boolean, reflect: true }) readonly = false;
+  @property({ type: Number }) rows = 4;
+  @property({ type: Number }) maxlength: number | undefined = undefined;
+  @property({ type: Boolean, reflect: true }) monospace = false;
+  // Validation states
+  @property({ type: Boolean, reflect: true }) error = false;
+  @property({ type: Boolean, reflect: true }) warning = false;
+  @property({ type: Boolean, reflect: true }) success = false;
+  // TTS support
+  @property({ type: Boolean, reflect: true }) speakable = false;
+  @property({ type: String }) voice = 'af_heart';
 
   static styles = css`
     :host {
@@ -263,23 +263,7 @@ export class GtkTextarea extends LitElement {
     }
   `;
 
-  constructor() {
-    super();
-    this.value = '';
-    this.placeholder = '';
-    this.disabled = false;
-    this.readonly = false;
-    this.rows = 4;
-    this.maxlength = undefined;
-    this.monospace = false;
-    this.error = false;
-    this.warning = false;
-    this.success = false;
-    this.speakable = false;
-    this.voice = 'af_heart';
-  }
-
-  render() {
+  render(): TemplateResult {
     return html`
       <div class="textarea-wrapper">
         <div class="textarea-container">
@@ -309,8 +293,9 @@ export class GtkTextarea extends LitElement {
     `;
   }
 
-  _handleInput(e) {
-    this.value = e.target.value;
+  private _handleInput(e: Event): void {
+    const target = e.target as HTMLTextAreaElement;
+    this.value = target.value;
     this.dispatchEvent(
       new CustomEvent('input', {
         detail: { value: this.value },
@@ -320,7 +305,7 @@ export class GtkTextarea extends LitElement {
     );
   }
 
-  _handleChange(_e) {
+  private _handleChange(_e: Event): void {
     this.dispatchEvent(
       new CustomEvent('change', {
         detail: { value: this.value },
@@ -330,17 +315,21 @@ export class GtkTextarea extends LitElement {
     );
   }
 
-  focus() {
-    this.shadowRoot.querySelector('textarea')?.focus();
+  focus(): void {
+    this.shadowRoot!.querySelector('textarea')?.focus();
   }
 
-  blur() {
-    this.shadowRoot.querySelector('textarea')?.blur();
+  blur(): void {
+    this.shadowRoot!.querySelector('textarea')?.blur();
   }
 
-  select() {
-    this.shadowRoot.querySelector('textarea')?.select();
+  select(): void {
+    this.shadowRoot!.querySelector('textarea')?.select();
   }
 }
 
-customElements.define('gtk-textarea', GtkTextarea);
+declare global {
+  interface HTMLElementTagNameMap {
+    'gtk-textarea': GtkTextarea;
+  }
+}
