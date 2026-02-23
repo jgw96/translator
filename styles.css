@@ -95,13 +95,9 @@ gtk-textarea::part(textarea) {
 
 @media (max-width: 770px) {
 
-  main {
-    padding-bottom: 6em;
-  }
-
   #container {
     grid-template-columns: 1fr;
-    gap: 4em;
+    gap: 2em;
   }
 
   gtk-textarea::part(textarea) {
@@ -110,15 +106,6 @@ gtk-textarea::part(textarea) {
 
   #textarea-actions {
     justify-content: end;
-  }
-
-  #translate-button {
-    position: fixed;
-    bottom: 12px;
-    left: 16px;
-    right: 16px;
-    /* height: 2em; */
-    width: auto;
   }
 
   #translate-button::part(button) {

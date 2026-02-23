@@ -1,5 +1,3 @@
-import { transcribeAudio as transcribeWithPolyfill } from './polyfills/transcription.ts';
-
 import type { GtkToast } from './components/gtk-toast';
 
 let audioStream: MediaStream | null = null;
@@ -11,10 +9,15 @@ export async function transcribeAudio(
   blob: Blob
 ): Promise<AsyncIterable<string> | undefined> {
   try {
+    const { transcribeAudio: transcribeWithPolyfill } =
+      await import('./polyfills/transcription.ts');
+
     const stream = await transcribeWithPolyfill(blob);
     return stream;
   } catch (error) {
     console.error('Error transcribing audio:', error);
+
+    await import('./components/gtk-toast');
 
     const toast = document.getElementById('target-toast') as GtkToast | null;
     if (toast) {
@@ -66,6 +69,8 @@ export async function recordAudio(): Promise<Blob> {
     });
   } catch (error) {
     console.error('Error recording audio:', error);
+
+    await import('./components/gtk-toast');
 
     const toast = document.getElementById('target-toast') as GtkToast | null;
     if (toast) {

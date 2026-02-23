@@ -24,6 +24,8 @@ export async function detectLanguage(text: string): Promise<string> {
   } catch (error) {
     console.error('Error detecting language:', error);
 
+    await import('./components/gtk-toast');
+
     const toast = document.getElementById('target-toast') as GtkToast | null;
     if (toast) {
       toast.show('Error detecting language. Please try again.', {
@@ -92,6 +94,9 @@ export async function translateText(
     return { stream, translator };
   } catch (err) {
     console.error('Error translating text:', err);
+
+    await import('./components/gtk-toast');
+
     const toast = document.getElementById('target-toast') as GtkToast | null;
     if (toast) {
       toast.show(

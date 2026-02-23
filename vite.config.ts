@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   esbuild: {
-    target: 'es2022',
+    target: 'es2024',
   },
+  plugins: [visualizer()],
   build: {
-    target: 'es2022',
+    target: 'es2024',
     rollupOptions: {
       input: {
         main: 'index.html',

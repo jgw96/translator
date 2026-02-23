@@ -28,10 +28,11 @@ const sourceLanguageSelect = document.getElementById(
   'source-language'
 ) as GtkSelect;
 const historyButton = document.getElementById('history-button') as GtkButton;
-const historyDrawer = document.getElementById('history-drawer') as GtkDrawer;
-console.log('History drawer:', historyDrawer);
 
-historyButton.addEventListener('click', () => {
+historyButton.addEventListener('click', async () => {
+  await import('./components/gtk-drawer');
+
+  const historyDrawer = document.getElementById('history-drawer') as GtkDrawer;
   historyDrawer.show();
 });
 
@@ -61,6 +62,7 @@ document.addEventListener('restore-translation', ((
   // Enable output buttons since we have translated text
   enableDisableOutputButtons(false);
 
+  const historyDrawer = document.getElementById('history-drawer') as GtkDrawer;
   // Close the history drawer
   historyDrawer.close();
 }) as EventListener);
